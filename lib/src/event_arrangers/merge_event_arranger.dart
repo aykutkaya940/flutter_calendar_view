@@ -21,23 +21,29 @@ class MergeEventArranger<T extends Object?> extends EventArranger<T> {
     final arrangedEvents = <OrganizedCalendarEventData<T>>[];
 
     for (final event in events) {
-      final startTime = event.startTime ?? DateTime.now();
-      final endTime = event.endTime ?? startTime;
-
+      // Start and End time should not be null and
+      // Start time should be less than End Time.
       assert(
-          !(endTime.getTotalMinutes <= startTime.getTotalMinutes),
+          !(event.startTime != null &&
+              event.endTime != null &&
+              event.endTime!.getTotalMinutes <
+                  event.startTime!.getTotalMinutes),
           "Assertion fail for event: \n$event\n"
           "startDate must be less than endDate.\n"
           "This error occurs when you does not provide startDate or endDate in "
-          "CalendarEventDate or provided endDate occurs before startDate.");
+          "CalendarEventDate or provided endDate occurs at the same time or"
+          " before startDate.");
 
-      final eventStart = startTime.getTotalMinutes;
-      final eventEnd = endTime.getTotalMinutes;
+      final eventStart = event.startTime!.getTotalMinutes;
+      final eventEnd = event.endTime!.getTotalMinutes;
 
       final arrangeEventLen = arrangedEvents.length;
 
+      // Defines the index of OrganizedEventData.
       var eventIndex = -1;
 
+      // Check if current event falls under the span of already arranged events.
+      // If so, get index of that event.
       for (var i = 0; i < arrangeEventLen; i++) {
         final arrangedEventStart =
             arrangedEvents[i].startDuration?.getTotalMinutes ?? 0;
@@ -55,6 +61,9 @@ class MergeEventArranger<T extends Object?> extends EventArranger<T> {
         }
       }
 
+      // If eventIndex in -1 then there are no arranged event for same timespan
+      // as current event.
+      // Create new span containing this event.
       if (eventIndex == -1) {
         final top = eventStart * heightPerMinute;
         final bottom = height - eventEnd * heightPerMinute;
@@ -64,12 +73,16 @@ class MergeEventArranger<T extends Object?> extends EventArranger<T> {
           bottom: bottom,
           left: 0,
           right: 0,
-          startDuration: startTime.copyFromMinutes(eventStart),
-          endDuration: endTime.copyFromMinutes(eventEnd),
+          startDuration: event.startTime!.copyFromMinutes(eventStart),
+          endDuration: event.endTime!.copyFromMinutes(eventEnd),
           events: [event],
         );
 
         arrangedEvents.add(newEvent);
+
+        // If eventIndex is not -1 that means that current event
+        // falls under organized events. Add current event in
+        // organized event and update the span.
       } else {
         final arrangedEventData = arrangedEvents[eventIndex];
 

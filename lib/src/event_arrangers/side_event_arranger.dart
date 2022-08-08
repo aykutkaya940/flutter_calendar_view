@@ -4,7 +4,7 @@
 
 part of 'event_arrangers.dart';
 
-class SideEventArranger<T extends Object?> extends EventArranger<T> {
+class SideEventArranger<T extends Object?> extends MergeEventArranger<T> {
   /// This class will provide method that will arrange
   /// all the events side by side.
   const SideEventArranger();
@@ -16,6 +16,30 @@ class SideEventArranger<T extends Object?> extends EventArranger<T> {
     required double width,
     required double heightPerMinute,
   }) {
+    final mergedEvents = super.arrange(
+        events: events,
+        height: height,
+        width: width,
+        heightPerMinute: heightPerMinute);
+
+    final organizedEvents = <OrganizedCalendarEventData<T>>[];
+
+    for (final event in mergedEvents) {
+      // If there is only one event in merged span no need to anything.
+      if (event.events.length == 1) {
+        organizedEvents.add(event);
+        continue;
+      }
+
+      event.events.sort((event1, event2) =>
+          event1.startTime!.getTotalMinutes -
+          event2.startTime!.getTotalMinutes);
+
+      var currentEventIndex = 0;
+
+      while (event.events.isNotEmpty) {}
+    }
+
     final durations = _getEventsDuration(events);
     final tempEvents = [...events]..sort((e1, e2) =>
         (e1.startTime?.getTotalMinutes ?? 0) -
